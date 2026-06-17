@@ -33,7 +33,6 @@ const invoiceSchema = {
   required: ["clientName", "items", "totalAmount"],
 };
 
-// FIX IS HERE: We added ": Request" so TypeScript knows what "req" is!
 export async function POST(req: Request) {
   try {
     const { prompt } = await req.json();
@@ -50,6 +49,11 @@ export async function POST(req: Request) {
         responseSchema: invoiceSchema,
       }
     });
+
+    // 🐛 FIX IS HERE: We check if response.text exists before parsing!
+    if (!response.text) {
+      return Response.json({ error: "AI returned an empty response." }, { status: 500 });
+    }
 
     const invoiceData = JSON.parse(response.text);
     
