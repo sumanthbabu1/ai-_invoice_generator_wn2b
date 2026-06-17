@@ -1,9 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 
-// Initialize the Gemini client using the key from your .env.local file
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-// Define the exact structure so Gemini knows EXACTLY what JSON to return
 const invoiceSchema = {
   type: "OBJECT",
   properties: {
@@ -35,16 +33,15 @@ const invoiceSchema = {
   required: ["clientName", "items", "totalAmount"],
 };
 
-export async function POST(req) {
+// FIX IS HERE: We added ": Request" so TypeScript knows what "req" is!
+export async function POST(req: Request) {
   try {
-    // 1. Get the text the user typed in the frontend
     const { prompt } = await req.json();
 
     if (!prompt) {
       return Response.json({ error: "Please provide invoice details." }, { status: 400 });
     }
 
-    // 2. Send the unstructured prompt to Gemini
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: `You are an expert billing assistant. Extract the invoice details from this text: "${prompt}"`,
@@ -54,10 +51,8 @@ export async function POST(req) {
       }
     });
 
-    // 3. Parse Gemini's perfect JSON response
     const invoiceData = JSON.parse(response.text);
     
-    // 4. Send the data back to the frontend
     return Response.json(invoiceData, { status: 200 });
 
   } catch (error) {
